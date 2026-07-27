@@ -35,6 +35,7 @@ To drastically improve portability, execution speed, and user experience, the ba
     *   Lists items vertically in a clean CSS grid layout.
     *   Aligned to match the standard dashboard width (`480px` and centered) for a consistent viewing experience.
     *   Shows live high/low columns with single-character Chinese labels (`高` / `低`) and current prices that update automatically in the background every 30 seconds.
+    *   **Interactive Sorting**: Sort watchlist items dynamically by **Stock Code**, **Company Name**, **Price**, or **Change %** in ascending/descending order via clickable table header columns or the top `Sort ↕` cycle button.
     *   Includes a **Clean All** button to clear the cached watchlist and active monitors at once.
     *   **Position Lock**: Selecting a stock by clicking its row highlights it without shifting its order in the watchlist.
 *   **Clean Input Box**: Removed default browser autocomplete popups (datalists) to prevent interface clutter, while keeping keystroke decoupling (press **Enter** to submit).

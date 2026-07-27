@@ -85,6 +85,57 @@ function App() {
     return saved ? JSON.parse(saved) : {};
   });
 
+  // Sorting state for mini mode
+  const [sortKey, setSortKey] = useState('default'); // 'default' | 'code' | 'name' | 'price' | 'change'
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      if (sortOrder === 'asc') {
+        setSortOrder('desc');
+      } else {
+        setSortKey('default');
+        setSortOrder('asc');
+      }
+    } else {
+      setSortKey(key);
+      setSortOrder(key === 'code' || key === 'name' ? 'asc' : 'desc');
+    }
+  };
+
+  const getSortedStocks = () => {
+    if (sortKey === 'default') return recentStocks;
+    const stocks = [...recentStocks];
+    stocks.sort((a, b) => {
+      let valA, valB;
+      if (sortKey === 'code') {
+        valA = parseInt(a, 10);
+        valB = parseInt(b, 10);
+      } else if (sortKey === 'name') {
+        valA = recentPrices[a]?.name || '';
+        valB = recentPrices[b]?.name || '';
+        return sortOrder === 'asc' ? valA.localeCompare(valB, 'zh-HK') : valB.localeCompare(valA, 'zh-HK');
+      } else if (sortKey === 'price') {
+        const priceA = recentPrices[a]?.price;
+        const priceB = recentPrices[b]?.price;
+        valA = priceA && priceA !== '...' ? parseFloat(priceA.replace(/,/g, '')) : -Infinity;
+        valB = priceB && priceB !== '...' ? parseFloat(priceB.replace(/,/g, '')) : -Infinity;
+      } else if (sortKey === 'change') {
+        const changeA = recentPrices[a]?.change || '';
+        const changeB = recentPrices[b]?.change || '';
+        const matchA = changeA.match(/([+-]?\d+(?:\.\d+)?)/);
+        const matchB = changeB.match(/([+-]?\d+(?:\.\d+)?)/);
+        valA = matchA ? parseFloat(matchA[1]) * (changeA.includes('-') ? -1 : 1) : -Infinity;
+        valB = matchB ? parseFloat(matchB[1]) * (changeB.includes('-') ? -1 : 1) : -Infinity;
+      }
+
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return stocks;
+  };
+
   const timerRef = useRef(null);
   const batchTimerRef = useRef(null);
   const prevPriceRef = useRef(null);
@@ -452,13 +503,26 @@ function App() {
             )}
             <div className="mini-header-actions">
               {recentStocks.length > 0 && (
-                <button 
-                  className="mini-clear-btn"
-                  onClick={clearAllRecentStocks}
-                  title="Clean All Watchlist Stocks"
-                >
-                  Clean All
-                </button>
+                <>
+                  <button 
+                    className={`mini-sort-btn ${sortKey !== 'default' ? 'active' : ''}`}
+                    onClick={() => {
+                      const keys = ['default', 'code', 'price', 'change'];
+                      const nextKey = keys[(keys.indexOf(sortKey) + 1) % keys.length];
+                      handleSort(nextKey);
+                    }}
+                    title={`Current Sort: ${sortKey === 'default' ? 'Default' : sortKey.toUpperCase() + ' (' + sortOrder + ')'}`}
+                  >
+                    {sortKey === 'default' ? 'Sort ↕' : `${sortKey.toUpperCase()} ${sortOrder === 'asc' ? '▲' : '▼'}`}
+                  </button>
+                  <button 
+                    className="mini-clear-btn"
+                    onClick={clearAllRecentStocks}
+                    title="Clean All Watchlist Stocks"
+                  >
+                    Clean All
+                  </button>
+                </>
               )}
               <button 
                 className="btn-icon mini-toggle-names" 
@@ -492,9 +556,32 @@ function App() {
             </div>
           </div>
 
+          {/* Column Header Bar for Sorting */}
+          {recentStocks.length > 0 && (
+            <div className={`mini-list-header ${showMiniNames ? 'with-name' : 'no-name'}`}>
+              <span className={`mini-col-header sortable ${sortKey === 'code' ? 'active' : ''}`} onClick={() => handleSort('code')} title="Sort by Code">
+                Code {sortKey === 'code' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+              </span>
+              {showMiniNames && (
+                <span className={`mini-col-header sortable ${sortKey === 'name' ? 'active' : ''}`} onClick={() => handleSort('name')} title="Sort by Name">
+                  Name {sortKey === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </span>
+              )}
+              <span className="mini-col-header disabled">高</span>
+              <span className="mini-col-header disabled">低</span>
+              <span className={`mini-col-header sortable ${sortKey === 'price' ? 'active' : ''}`} onClick={() => handleSort('price')} title="Sort by Price">
+                Price {sortKey === 'price' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+              </span>
+              <span className={`mini-col-header sortable ${sortKey === 'change' ? 'active' : ''}`} onClick={() => handleSort('change')} title="Sort by Change %">
+                Change {sortKey === 'change' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+              </span>
+              <span></span>
+            </div>
+          )}
+
           {/* Watchlist */}
           <div className="mini-stock-list">
-            {recentStocks.map((c) => {
+            {getSortedStocks().map((c) => {
               const isActive = code === c;
               const priceData = recentPrices[c] || { name: '', price: '...', high: '...', low: '...' };
               return (

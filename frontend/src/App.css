@@ -542,6 +542,61 @@ body {
   letter-spacing: 0.05em;
 }
 
+.mini-sort-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.mini-sort-btn:hover, .mini-sort-btn.active {
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.mini-list-header {
+  display: grid;
+  align-items: center;
+  padding: 0.2rem 0.3rem 0.1rem 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  user-select: none;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.2rem;
+}
+
+.mini-list-header.with-name {
+  grid-template-columns: 38px 105px 85px 75px 1fr 65px 14px;
+}
+
+.mini-list-header.no-name {
+  grid-template-columns: 78px 98px 85px 1fr 75px 16px;
+}
+
+.mini-col-header {
+  transition: color 0.15s ease;
+}
+
+.mini-col-header.sortable {
+  cursor: pointer;
+}
+
+.mini-col-header.sortable:hover, .mini-col-header.active {
+  color: var(--accent-blue);
+}
+
+.mini-col-header.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .mini-stock-list {
   display: flex;
   flex-direction: column;
