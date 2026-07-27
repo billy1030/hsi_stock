@@ -53,7 +53,7 @@ func main() {
 	err := wails.Run(&options.App{
 		Title:  "ETNet Live Stock & Chart Dashboard",
 		Width:  500,
-		Height: 850,
+		Height: 380,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

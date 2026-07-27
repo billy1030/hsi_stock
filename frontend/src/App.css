@@ -59,9 +59,9 @@ body {
 }
 
 .app-container {
-  width: 500px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0.25rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -69,11 +69,11 @@ body {
 }
 
 .app-container.no-logs {
-  height: 322px;
+  height: 100%;
 }
 
 .app-container.has-logs {
-  height: 452px;
+  height: 100%;
 }
 
 /* Compact Header */
@@ -504,27 +504,34 @@ body {
 }
 
 .mini-mode-wrapper {
-  padding: 0.15rem;
+  padding: 0;
+  height: 100%;
 }
 
 .mini-widget-card {
   background: var(--panel-bg);
   backdrop-filter: blur(12px);
-  border-radius: 8px;
-  padding: 0.35rem;
+  border-radius: 0;
+  padding: 0.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: none;
   width: 100%;
+  height: 100%;
 }
 
 .mini-widget-header {
+  --wails-draggable: drag;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 0.15rem;
   border-bottom: 1px solid var(--panel-border);
+}
+
+.mini-widget-header button {
+  --wails-draggable: no-drag;
 }
 
 .mini-widget-title {

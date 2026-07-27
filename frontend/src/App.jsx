@@ -73,7 +73,7 @@ function App() {
     prevPriceRef.current = null;
   };
 
-  // Capture last 10 used stock codes (persisted in localStorage)
+  // Capture last 20 used stock codes (persisted in localStorage)
   const [recentStocks, setRecentStocks] = useState(() => {
     const saved = localStorage.getItem('recentStocks');
     return saved ? JSON.parse(saved) : ['00700', '09988', '09992', '00100', '02513'];
@@ -115,7 +115,7 @@ function App() {
   const updateRecentStocks = (validCode) => {
     setRecentStocks((prev) => {
       const filtered = prev.filter(c => c !== validCode);
-      const updated = [validCode, ...filtered].slice(0, 10);
+      const updated = [validCode, ...filtered].slice(0, 20);
       localStorage.setItem('recentStocks', JSON.stringify(updated));
       return updated;
     });
@@ -161,7 +161,7 @@ function App() {
     prevPriceRef.current = null;
   };
 
-  // Grab and update prices, highs, and lows for all last 10 monitored stocks
+  // Grab and update prices, highs, and lows for all last 20 monitored stocks
   const fetchAllRecentPrices = async () => {
     if (isFetchingBatchRef.current) return;
     isFetchingBatchRef.current = true;
@@ -213,7 +213,7 @@ function App() {
       if (data.code) {
         setRecentStocks((prev) => {
           if (prev.includes(data.code)) return prev;
-          const updated = [data.code, ...prev].slice(0, 10);
+          const updated = [data.code, ...prev].slice(0, 20);
           localStorage.setItem('recentStocks', JSON.stringify(updated));
           return updated;
         });

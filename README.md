@@ -31,7 +31,7 @@ To drastically improve portability, execution speed, and user experience, the ba
 *   **Split Stock & ETF Chart**: Professional SVG chart displaying price trends (top pane) and dynamic volume bars (bottom pane) with full time stamps on the X-axis and Y-axis scale values.
 *   **ETF Redirect Support**: Seamlessly scrapes and parses ETF quotes (e.g., `7709`, `3033`) by dynamically detecting and following ETNet's JavaScript redirect pattern (pointing to dedicated `/www/tc/etf/quote/` pages).
 *   **Mini Mode Watchlist**:
-    *   Saves up to 10 stocks/ETFs in local browser storage (`localStorage`).
+    *   Saves up to 20 stocks/ETFs in local browser storage (`localStorage`).
     *   Lists items vertically in a clean CSS grid layout.
     *   Aligned to match the standard dashboard width (`480px` and centered) for a consistent viewing experience.
     *   Shows live high/low columns with single-character Chinese labels (`高` / `低`) and current prices that update automatically in the background every 30 seconds.
