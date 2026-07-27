@@ -1,6 +1,6 @@
 {
   "name": "etnet-live-stock-single-app",
-  "version": "1.0.0",
+  "version": "v20260727",
   "description": "Unified single-page application for real-time ETNet stock quotes capture",
   "main": "backend/server.js",
   "type": "module",

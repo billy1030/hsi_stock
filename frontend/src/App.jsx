@@ -440,7 +440,7 @@ function App() {
         <div className="mini-widget-card">
           {/* Top Bar with Expand Icon */}
           <div className="mini-widget-header">
-            <span className="mini-widget-title">Live Watchlist</span>
+            <span className="mini-widget-title">Live Watchlist <span style={{ fontSize: '10px', opacity: 0.55, fontWeight: 'normal', marginLeft: '4px' }}>v20260727</span></span>
             {hsiData && (
               <div className="mini-hsi-ticker">
                 <span className="mini-lbl">恒指</span>

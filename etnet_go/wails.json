@@ -2,6 +2,7 @@
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "ETNet Live Stock Dashboard",
   "outputfilename": "ETNet_Live_Stock",
+  "version": "v20260727",
   "frontend:build": "",
   "frontend:install": "",
   "author": {

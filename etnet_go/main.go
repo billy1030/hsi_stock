@@ -51,7 +51,7 @@ func main() {
 
 	// Launch native Windows GUI via WebView2
 	err := wails.Run(&options.App{
-		Title:  "ETNet Live Stock & Chart Dashboard",
+		Title:  "ETNet Live Stock & Chart Dashboard v20260727",
 		Width:  500,
 		Height: 380,
 		AssetServer: &assetserver.Options{
