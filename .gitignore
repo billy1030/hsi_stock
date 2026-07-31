@@ -10,9 +10,6 @@ out/
 release/
 dist-electron/
 *.exe
-!HSI_Stock.exe
-!etnet_go/HSI_Stock.exe
-!etnet_go/ETNet_Live_Stock.exe
 
 # IDEs and editors
 .idea/
