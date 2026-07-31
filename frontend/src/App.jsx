@@ -23,6 +23,10 @@ function App() {
     const saved = localStorage.getItem('showMiniNames');
     return saved !== null ? JSON.parse(saved) : true;
   });
+  const [showMiniGraph, setShowMiniGraph] = useState(() => {
+    const saved = localStorage.getItem('showMiniGraph');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
   const [hsiData, setHsiData] = useState(null);
 
   useEffect(() => {
@@ -38,6 +42,14 @@ function App() {
     setShowMiniNames(prev => {
       const newVal = !prev;
       localStorage.setItem('showMiniNames', JSON.stringify(newVal));
+      return newVal;
+    });
+  };
+
+  const toggleMiniGraph = () => {
+    setShowMiniGraph(prev => {
+      const newVal = !prev;
+      localStorage.setItem('showMiniGraph', JSON.stringify(newVal));
       return newVal;
     });
   };
@@ -226,6 +238,14 @@ function App() {
           setRecentPrices((prev) => {
             const changeMatch = data.change ? data.change.match(/\(([^)]+)\)/) : null;
             const pct = changeMatch ? changeMatch[1] : '';
+            const priceNum = data.price ? parseFloat(data.price.replace(/,/g, '')) : null;
+            const existingHist = prev[recentCode]?.history || [];
+            let newHist = existingHist;
+            if (priceNum !== null && !isNaN(priceNum) && priceNum > 0) {
+              if (existingHist.length === 0 || existingHist[existingHist.length - 1] !== priceNum) {
+                newHist = [...existingHist, priceNum].slice(-30);
+              }
+            }
             const updated = { 
               ...prev, 
               [recentCode]: {
@@ -233,7 +253,9 @@ function App() {
                 price: data.price,
                 high: data.highest,
                 low: data.lowest,
-                change: pct
+                volume: data.volume,
+                change: pct,
+                history: newHist
               }
             };
             localStorage.setItem('recentPrices', JSON.stringify(updated));
@@ -271,6 +293,14 @@ function App() {
         setRecentPrices((prev) => {
           const changeMatch = data.change ? data.change.match(/\(([^)]+)\)/) : null;
           const pct = changeMatch ? changeMatch[1] : '';
+          const priceNum = data.price ? parseFloat(data.price.replace(/,/g, '')) : null;
+          const existingHist = prev[data.code]?.history || [];
+          let newHist = existingHist;
+          if (priceNum !== null && !isNaN(priceNum) && priceNum > 0) {
+            if (existingHist.length === 0 || existingHist[existingHist.length - 1] !== priceNum) {
+              newHist = [...existingHist, priceNum].slice(-30);
+            }
+          }
           const updated = { 
             ...prev, 
             [data.code]: {
@@ -278,7 +308,9 @@ function App() {
               price: data.price,
               high: data.highest,
               low: data.lowest,
-              change: pct
+              volume: data.volume,
+              change: pct,
+              history: newHist
             }
           };
           localStorage.setItem('recentPrices', JSON.stringify(updated));
@@ -484,6 +516,70 @@ function App() {
     );
   };
 
+  // Helper to render compact Area Graph (no volume pane) for each stock item in Mini Mode
+  const renderMiniAreaGraph = (priceData, stockCode) => {
+    const history = priceData.history || [];
+    const highVal = priceData.high ? parseFloat(priceData.high.replace(/,/g, '')) : null;
+    const lowVal = priceData.low ? parseFloat(priceData.low.replace(/,/g, '')) : null;
+    const priceVal = priceData.price ? parseFloat(priceData.price.replace(/,/g, '')) : null;
+
+    let points = [...history];
+    if (points.length === 0 && priceVal !== null) {
+      points = [lowVal || priceVal, priceVal, highVal || priceVal].filter(v => v !== null && !isNaN(v));
+    } else if (points.length === 1) {
+      points = [points[0] * 0.998, points[0], points[0] * 1.002];
+    }
+
+    if (points.length < 2) {
+      return <div className="mini-graph-empty">-</div>;
+    }
+
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const range = max - min || (min * 0.01) || 1;
+
+    const w = 140;
+    const h = 24;
+    const p = 3;
+
+    const coords = points.map((val, idx) => {
+      const x = p + (idx / (points.length - 1)) * (w - 2 * p);
+      const y = (h - p) - ((val - min) / range) * (h - 2 * p);
+      return { x, y };
+    });
+
+    const lineD = coords.reduce((acc, pt, idx) => {
+      return idx === 0 ? `M ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}` : `${acc} L ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`;
+    }, '');
+
+    const firstX = coords[0].x.toFixed(1);
+    const lastX = coords[coords.length - 1].x.toFixed(1);
+    const areaD = `${lineD} L ${lastX} ${h} L ${firstX} ${h} Z`;
+
+    const isUp = priceData.change?.includes('+');
+    const isDown = priceData.change?.includes('-');
+    const colorVar = isUp ? 'var(--accent-green)' : isDown ? 'var(--accent-red)' : 'var(--accent-blue)';
+    const gradId = `mini-grad-${stockCode}`;
+
+    const lastCoord = coords[coords.length - 1];
+
+    return (
+      <div className="mini-area-graph-container">
+        <svg viewBox={`0 0 ${w} ${h}`} className="mini-sparkline-svg" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={colorVar} stopOpacity="0.35" />
+              <stop offset="100%" stopColor={colorVar} stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+          <path d={areaD} fill={`url(#${gradId})`} />
+          <path d={lineD} fill="none" stroke={colorVar} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={lastCoord.x} cy={lastCoord.y} r="2" fill={colorVar} className="pulse-dot" />
+        </svg>
+      </div>
+    );
+  };
+
   // 1. Very Compact / Mini Mode Layout
   if (isMiniMode) {
     return (
@@ -491,7 +587,7 @@ function App() {
         <div className="mini-widget-card">
           {/* Top Bar with Expand Icon */}
           <div className="mini-widget-header">
-            <span className="mini-widget-title">Live Watchlist <span style={{ fontSize: '10px', opacity: 0.55, fontWeight: 'normal', marginLeft: '4px' }}>v20260727</span></span>
+            <span className="mini-widget-title">Live Watchlist <span style={{ fontSize: '10px', opacity: 0.55, fontWeight: 'normal', marginLeft: '4px' }}>v20260731</span></span>
             {hsiData && (
               <div className="mini-hsi-ticker">
                 <span className="mini-lbl">恒指</span>
@@ -516,14 +612,26 @@ function App() {
                     {sortKey === 'default' ? 'Sort ↕' : `${sortKey.toUpperCase()} ${sortOrder === 'asc' ? '▲' : '▼'}`}
                   </button>
                   <button 
-                    className="mini-clear-btn"
+                    className="btn-icon mini-clear-btn"
                     onClick={clearAllRecentStocks}
                     title="Clean All Watchlist Stocks"
                   >
-                    Clean All
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
                   </button>
                 </>
               )}
+              <button 
+                className={`btn-icon mini-toggle-graph ${showMiniGraph ? 'active' : ''}`} 
+                onClick={toggleMiniGraph}
+                title={showMiniGraph ? "Show Numerical Stats (高/低/量)" : "Show Dynamic Area Graph (面積圖)"}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </button>
               <button 
                 className="btn-icon mini-toggle-names" 
                 onClick={toggleMiniNames}
@@ -558,7 +666,7 @@ function App() {
 
           {/* Column Header Bar for Sorting */}
           {recentStocks.length > 0 && (
-            <div className={`mini-list-header ${showMiniNames ? 'with-name' : 'no-name'}`}>
+            <div className={`mini-list-header ${showMiniGraph ? 'with-graph' : ''} ${showMiniNames ? 'with-name' : 'no-name'}`}>
               <span className={`mini-col-header sortable ${sortKey === 'code' ? 'active' : ''}`} onClick={() => handleSort('code')} title="Sort by Code">
                 Code {sortKey === 'code' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
               </span>
@@ -567,8 +675,15 @@ function App() {
                   Name {sortKey === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                 </span>
               )}
-              <span className="mini-col-header disabled">高</span>
-              <span className="mini-col-header disabled">低</span>
+              {showMiniGraph ? (
+                <span className="mini-col-header disabled graph-col-header">Trend Area</span>
+              ) : (
+                <>
+                  <span className="mini-col-header disabled">高</span>
+                  <span className="mini-col-header disabled">低</span>
+                  <span className="mini-col-header disabled">量</span>
+                </>
+              )}
               <span className={`mini-col-header sortable ${sortKey === 'price' ? 'active' : ''}`} onClick={() => handleSort('price')} title="Sort by Price">
                 Price {sortKey === 'price' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
               </span>
@@ -583,11 +698,11 @@ function App() {
           <div className="mini-stock-list">
             {getSortedStocks().map((c) => {
               const isActive = code === c;
-              const priceData = recentPrices[c] || { name: '', price: '...', high: '...', low: '...' };
+              const priceData = recentPrices[c] || { name: '', price: '...', high: '...', low: '...', volume: '...' };
               return (
                 <div 
                   key={c} 
-                  className={`mini-stock-item ${isActive ? 'active' : ''} ${isActive ? flashClass : ''} ${showMiniNames ? 'with-name' : 'no-name'}`}
+                  className={`mini-stock-item ${isActive ? 'active' : ''} ${isActive ? flashClass : ''} ${showMiniGraph ? 'with-graph' : ''} ${showMiniNames ? 'with-name' : 'no-name'}`}
                   onClick={() => {
                     if (!isActive) {
                       setCode(c);
@@ -604,13 +719,23 @@ function App() {
                     </span>
                   )}
                   
-                  <span className="mini-stat-high">
-                    <span className="mini-lbl">高</span> {priceData.high || '-'}
-                  </span>
+                  {showMiniGraph ? (
+                    renderMiniAreaGraph(priceData, c)
+                  ) : (
+                    <>
+                      <span className="mini-stat-high">
+                        <span className="mini-lbl">高</span> {priceData.high || '-'}
+                      </span>
 
-                  <span className="mini-stat-low">
-                    <span className="mini-lbl">低</span> {priceData.low || '-'}
-                  </span>
+                      <span className="mini-stat-low">
+                        <span className="mini-lbl">低</span> {priceData.low || '-'}
+                      </span>
+
+                      <span className="mini-stat-vol">
+                        <span className="mini-lbl">量</span> {priceData.volume || '-'}
+                      </span>
+                    </>
+                  )}
 
                   <span className={`mini-item-price ${isActive ? priceColorClass : ''}`}>
                     {priceData.price || '-'}

@@ -1,4 +1,4 @@
-# ETNet Live Stock & Chart Dashboard
+# HSI Stock & Chart Dashboard
 
 > [!NOTE]
 > **Disclaimer & Context**
@@ -18,7 +18,7 @@ To drastically improve portability, execution speed, and user experience, the ba
 * ⚡ **Zero External Dependencies (Zero Node.js / npm needed)**: The entire application—backend server logic, HTML parser (`goquery`), and frontend UI assets—compiles into a single standalone `.exe` binary (~17 MB). Users can launch and use it out-of-the-box on any Windows machine without installing Node.js, npm, or extra runtimes.
 * 📦 **Instant Startup & Low Resource Footprint**: Unlike Electron apps which package heavy Chromium binaries (often 150MB+), the Go + Wails architecture uses the built-in Windows WebView2 runtime. This results in minimal RAM usage (~30-50 MB vs 300MB+ in Electron) and sub-second cold starts.
 * 🖥️ **Pure Native Desktop Experience**: Runs as an isolated native Windows desktop application window (with customizable dimensions, window controls, and embedded app icons), eliminating the need to launch or manage browser tabs.
-* 🔒 **Self-Contained & Ultra-Portable**: Everything lives inside a single executable (`ETNet_Live_Stock.exe`), making it ideal for running off USB flash drives or deploying across multiple devices effortlessly.
+* 🔒 **Self-Contained & Ultra-Portable**: Everything lives inside a single executable (`HSI_Stock.exe`), making it ideal for running off USB flash drives or deploying across multiple devices effortlessly.
 
 ## 📸 Screenshots
 
@@ -58,11 +58,16 @@ If this project saved you a few minutes of typing every day, consider buying me 
 
 A self-contained native desktop app built with **Go** and **Wails v2** (leveraging native OS WebView / WebView2). No Node.js runtime or external web browser required!
 
-* **Windows Executable**:
-  Execute `etnet_go/ETNet_Live_Stock.exe` or build it yourself:
+* **Windows Executable & Build Script**:
+  Run the automated PowerShell build script or compile manually:
+  ```powershell
+  cd etnet_go
+  .\build.ps1
+  ```
+  Or using Wails CLI directly:
   ```bash
   cd etnet_go
-  go build -tags desktop,production -ldflags="-H windowsgui" -o ETNet_Live_Stock.exe .
+  wails build -clean -trimpath
   ```
 
 * **macOS (Apple Silicon & Intel)**:
@@ -74,7 +79,7 @@ A self-contained native desktop app built with **Go** and **Wails v2** (leveragi
   wails build
 
   # Or standalone macOS binary via Go CLI:
-  go build -tags desktop,production -o ETNet_Live_Stock_mac .
+  go build -tags desktop,production -o HSI_Stock_mac .
   ```
 
 ---
@@ -98,7 +103,7 @@ Running the web server version requires Node.js:
 
 ## 📁 Project Structure
 
-*   `/etnet_go`: Standalone native Go + Wails desktop application (`main.go`, `go.mod`, embedded web assets).
+*   `/etnet_go`: Standalone native Go + Wails desktop application (`main.go`, `go.mod`, `build.ps1`, embedded web assets).
 *   `/backend`: Node/Express web server proxying requests to ETNet and serving built React files.
 *   `/frontend`: React client UI built using Vite.
 *   `package.json` (root): Launches the single-port Express server serving port `3300`.

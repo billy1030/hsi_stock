@@ -573,11 +573,19 @@ body {
 }
 
 .mini-list-header.with-name {
-  grid-template-columns: 38px 105px 85px 75px 1fr 65px 14px;
+  grid-template-columns: 38px 105px 70px 70px 85px 1fr 65px 14px;
 }
 
 .mini-list-header.no-name {
-  grid-template-columns: 78px 98px 85px 1fr 75px 16px;
+  grid-template-columns: 60px 75px 75px 90px 1fr 70px 16px;
+}
+
+.mini-list-header.with-graph.with-name {
+  grid-template-columns: 38px 105px 1fr 65px 65px 14px;
+}
+
+.mini-list-header.with-graph.no-name {
+  grid-template-columns: 60px 1fr 75px 70px 16px;
 }
 
 .mini-col-header {
@@ -604,12 +612,46 @@ body {
 }
 
 .mini-stock-item.with-name {
-  grid-template-columns: 38px 105px 85px 75px 1fr 65px 14px;
+  grid-template-columns: 38px 105px 70px 70px 85px 1fr 65px 14px;
 }
 
 .mini-stock-item.no-name {
-  /* Columns: Code (78px), High (98px - adds 20px space), Low (85px), Price (1fr), Change (75px), Remove (16px) */
-  grid-template-columns: 78px 98px 85px 1fr 75px 16px;
+  grid-template-columns: 60px 75px 75px 90px 1fr 70px 16px;
+}
+
+.mini-stock-item.with-graph.with-name {
+  grid-template-columns: 38px 105px 1fr 65px 65px 14px;
+}
+
+.mini-stock-item.with-graph.no-name {
+  grid-template-columns: 60px 1fr 75px 70px 16px;
+}
+
+.mini-area-graph-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  width: 100%;
+  padding: 0 4px;
+}
+
+.mini-sparkline-svg {
+  width: 100%;
+  height: 24px;
+  overflow: visible;
+}
+
+.mini-graph-empty {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.btn-icon.mini-toggle-graph.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
 }
 
 .mini-stock-item {
@@ -714,6 +756,14 @@ body {
   color: var(--text-secondary);
 }
 
+.mini-stat-vol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
 .mini-lbl {
   font-weight: 800;
   opacity: 0.85;
@@ -725,6 +775,10 @@ body {
 
 .mini-stat-low .mini-lbl {
   color: var(--accent-red);
+}
+
+.mini-stat-vol .mini-lbl {
+  color: var(--accent-purple);
 }
 
 /* Mini Header Actions Styles */

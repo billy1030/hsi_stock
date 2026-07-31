@@ -236,11 +236,12 @@ app.get('/api/hsi', async (req, res) => {
     let hsiValue = '';
     let hsiChange = '';
 
-    $('span, div, td').each((i, el) => {
-      const text = $(el).text().trim();
-      if (text.includes('恒生指數') && text.length < 100) {
-        const match = text.match(/恒生指數\s*([\d,.]+)\s*([-+].*)/);
-        if (match) {
+    const reHSI = /恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))/;
+    $('.card').each((i, el) => {
+      const text = $(el).text().replace(/\s+/g, ' ').trim();
+      if ((text.startsWith('恒生指數') || text.includes('恒生指數')) && text.length < 80) {
+        const match = text.match(reHSI);
+        if (match && !hsiValue) {
           hsiValue = match[1];
           hsiChange = match[2];
         }
@@ -248,8 +249,8 @@ app.get('/api/hsi', async (req, res) => {
     });
 
     if (!hsiValue) {
-      const bodyText = $('body').text();
-      const match = bodyText.match(/恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))/);
+      const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+      const match = bodyText.match(reHSI);
       if (match) {
         hsiValue = match[1];
         hsiChange = match[2];

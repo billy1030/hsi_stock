@@ -51,7 +51,7 @@ func main() {
 
 	// Launch native Windows GUI via WebView2
 	err := wails.Run(&options.App{
-		Title:  "ETNet Live Stock & Chart Dashboard v20260727",
+		Title:  "HSI Live Stock & Chart Dashboard v20260731",
 		Width:  500,
 		Height: 380,
 		AssetServer: &assetserver.Options{
@@ -361,12 +361,13 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 	hsiValue := ""
 	hsiChange := ""
 
-	reHSI := regexp.MustCompile(`恒生指數\s*([\d,.]+)\s*([-+].*)`)
-	doc.Find("span, div, td").Each(func(i int, s *goquery.Selection) {
+	reHSI := regexp.MustCompile(`恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
+	doc.Find(".card").Each(func(i int, s *goquery.Selection) {
 		txt := strings.TrimSpace(s.Text())
-		if strings.Contains(txt, "恒生指數") && len(txt) < 100 {
-			m := reHSI.FindStringSubmatch(txt)
-			if len(m) > 2 {
+		txtClean := strings.Join(strings.Fields(txt), " ")
+		if strings.HasPrefix(txtClean, "恒生指數") || strings.Contains(txtClean, "恒生指數") && len(txtClean) < 80 {
+			m := reHSI.FindStringSubmatch(txtClean)
+			if len(m) > 2 && hsiValue == "" {
 				hsiValue = m[1]
 				hsiChange = m[2]
 			}
@@ -374,9 +375,8 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if hsiValue == "" {
-		bodyText := doc.Text()
-		reHSIFull := regexp.MustCompile(`恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
-		m := reHSIFull.FindStringSubmatch(bodyText)
+		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
+		m := reHSI.FindStringSubmatch(bodyText)
 		if len(m) > 2 {
 			hsiValue = m[1]
 			hsiChange = m[2]
