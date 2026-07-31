@@ -24,7 +24,7 @@ To drastically improve portability, execution speed, and user experience, the ba
 
 | Full Mode | Mini Mode (Watchlist) | Mini Mode (Graph) |
 | :---: | :---: | :---: |
-| ![Full Mode](image/Screenshot%202026-07-31%20104000.png) | ![Mini Mode Watchlist](image/Screenshot%202026-07-31%20103654.png) | ![Mini Mode Graph](image/Screenshot%202026-07-31%20103740.png) |
+| ![Full Mode](image/Screenshot%202026-07-31%20104000.png) | ![Mini Mode Watchlist](image/Screenshot%202026-07-31%20103740.png) | ![Mini Mode Graph](image/Screenshot%202026-07-31%20103654.png) |
 
 ## 🚀 Features
 
