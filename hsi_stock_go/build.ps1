@@ -7,7 +7,7 @@ Write-Host "==========================================" -ForegroundColor Cyan
 Get-Process -Name "HSI_Stock" -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-Process -Name "ETNet_Live_Stock" -ErrorAction SilentlyContinue | Stop-Process -Force
 
-Set-Location -Path "C:\ai\etnet\etnet_go"
+Set-Location -Path "C:\ai\etnet\hsi_stock_go"
 
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host " Building Wails binary with -trimpath...  " -ForegroundColor Cyan
@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$exePath = "C:\ai\etnet\etnet_go\build\bin\HSI_Stock.exe"
+$exePath = "C:\ai\etnet\hsi_stock_go\build\bin\HSI_Stock.exe"
 
 if (-not (Test-Path $exePath)) {
     Write-Host "Error: Built executable not found at $exePath" -ForegroundColor Red

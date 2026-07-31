@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: '../etnet_go/frontend_dist',
+    outDir: '../hsi_stock_go/frontend_dist',
     emptyOutDir: true
   },
   server: {

@@ -61,19 +61,19 @@ A self-contained native desktop app built with **Go** and **Wails v2** (leveragi
 * **Windows Executable & Build Script**:
   Run the automated PowerShell build script or compile manually:
   ```powershell
-  cd etnet_go
+  cd hsi_stock_go
   .\build.ps1
   ```
   Or using Wails CLI directly:
   ```bash
-  cd etnet_go
+  cd hsi_stock_go
   wails build -clean -trimpath
   ```
 
 * **macOS (Apple Silicon & Intel)**:
   Build native macOS desktop app bundle or binary directly on macOS:
   ```bash
-  cd etnet_go
+  cd hsi_stock_go
   
   # macOS App Bundle (recommended)
   wails build
@@ -103,7 +103,7 @@ Running the web server version requires Node.js:
 
 ## 📁 Project Structure
 
-*   `/etnet_go`: Standalone native Go + Wails desktop application (`main.go`, `go.mod`, `build.ps1`, embedded web assets).
+*   `/hsi_stock_go`: Standalone native Go + Wails desktop application (`main.go`, `go.mod`, `build.ps1`, embedded web assets).
 *   `/backend`: Node/Express web server proxying requests to ETNet and serving built React files.
 *   `/frontend`: React client UI built using Vite.
 *   `package.json` (root): Launches the single-port Express server serving port `3300`.
