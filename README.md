@@ -1,8 +1,10 @@
 # HSI Stock & Chart Dashboard
 
-> [!NOTE]
-> **Disclaimer & Context**
-> This project is created as a testing experience for AI-assisted "vibe coding". It is intended for experimental evaluation and exploration purposes only.
+> [!WARNING]
+> **Disclaimer & Legal Notice**
+> This project is created strictly as an experimental testing experience for AI-assisted "vibe coding" and personal educational exploration.
+> - **Data Sourcing**: All stock information and index data displayed by this application are captured directly from **ETNet HK** (`www.etnet.com.hk`). This application is not affiliated with, endorsed by, or officially connected to ETNet HK.
+> - **Limitation of Liability & Legal Risk**: The developer accepts **no responsibility or liability** for the accuracy, timeliness, completeness, or reliability of any data retrieved, nor for any financial decisions, trading actions, or legal consequences arising from the use of this software. **Users assume all legal risks, responsibilities, and compliance obligations** associated with running this tool or consuming data fetched from third-party sources.
 
 A unified single-port application that captures real-time stock details from ETNet HK, visualizes price and volume histories in a custom split SVG chart, and offers a highly-optimized Mini Mode Watchlist widget.
 
