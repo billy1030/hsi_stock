@@ -32,14 +32,14 @@ To drastically improve portability, execution speed, and user experience, the ba
 
 *   **Split Stock & ETF Chart**: Professional SVG chart displaying price trends (top pane) and dynamic volume bars (bottom pane) with full time stamps on the X-axis and Y-axis scale values.
 *   **ETF Redirect Support**: Seamlessly scrapes and parses ETF quotes (e.g., `7709`, `3033`) by dynamically detecting and following ETNet's JavaScript redirect pattern (pointing to dedicated `/www/tc/etf/quote/` pages).
-*   **Mini Mode Watchlist**:
-    *   Saves up to 20 stocks/ETFs in local browser storage (`localStorage`).
-    *   Lists items vertically in a clean CSS grid layout.
-    *   Aligned to match the standard dashboard width (`480px` and centered) for a consistent viewing experience.
-    *   Shows live high/low columns with single-character Chinese labels (`高` / `低`) and current prices that update automatically in the background every 30 seconds.
-    *   **Interactive Sorting**: Sort watchlist items dynamically by **Stock Code**, **Company Name**, **Price**, or **Change %** in ascending/descending order via clickable table header columns or the top `Sort ↕` cycle button.
-    *   Includes a **Clean All** button to clear the cached watchlist and active monitors at once.
-    *   **Position Lock**: Selecting a stock by clicking its row highlights it without shifting its order in the watchlist.
+*   **Mini Mode Watchlist Widget**:
+    *   **Dual View Modes**: Switch seamlessly between **Numerical Stats View** (showing `高` High / `低` Low / `量` Volume) and **Dynamic Trend Graph View** (rendering inline SVG price area charts for every monitored stock).
+    *   **Live HSI Index Ticker**: Displays real-time Hang Seng Index (`恒指`) value and price change directly in the widget header.
+    *   **Customizable Column Views**: Toggle company name column visibility on or off (`Aa` icon) to save horizontal space.
+    *   **Interactive Multi-Column Sorting**: Sort watchlist items dynamically by **Code**, **Name**, **Price**, or **Change %** (asc/desc) via table column headers or the top `Sort ↕` cycle button.
+    *   **Position Lock & Selection Highlight**: Clicking a row highlights the stock without altering its position in the watchlist.
+    *   **Clean & Reset Controls**: Includes a quick trash action to clear all tracked items and monitors at once.
+    *   **State Persistence**: Saves watchlist stocks, sorting order, view mode preferences, and window mode state in local browser storage (`localStorage`).
 *   **Clean Input Box**: Removed default browser autocomplete popups (datalists) to prevent interface clutter, while keeping keystroke decoupling (press **Enter** to submit).
 *   **Dual Color Themes**: Day Mode (light slate-blue style with a soft light-blue selected item background) and Night Mode.
 *   **State Persistence**: Automatically remembers and loads your last active stock or ETF when you reopen the page.
