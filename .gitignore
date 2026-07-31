@@ -10,6 +10,9 @@ out/
 release/
 dist-electron/
 *.exe
+*_mac
+*_mac_*
+*_arm64
 
 # IDEs and editors
 .idea/
