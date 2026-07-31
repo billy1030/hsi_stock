@@ -113,7 +113,7 @@ func handleQuote(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"Failed to fetch ETNet quote: %s"}`, err.Error()), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf(`{"error":"Failed to fetch stock quote: %s"}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()

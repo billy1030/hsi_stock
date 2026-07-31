@@ -1,7 +1,7 @@
-# ETNet Wails Build & Self-Sign Automation Script
+# HSI Stock Wails Build & Self-Sign Automation Script
 
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host " Stopping existing ETNet processes...    " -ForegroundColor Cyan
+Write-Host " Stopping existing HSI Stock processes... " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 Get-Process -Name "HSI_Stock" -ErrorAction SilentlyContinue | Stop-Process -Force

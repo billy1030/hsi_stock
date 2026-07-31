@@ -1,4 +1,4 @@
-module etnet-live-stock
+module hsi-stock
 
 go 1.25.0
 
