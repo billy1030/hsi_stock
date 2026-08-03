@@ -415,6 +415,27 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Direct live fetch from etnet futures page if 期指 is missing or delayed
+	if futuresVal == "" {
+		futReq, futErr := http.NewRequest("GET", "https://www.etnet.com.hk/www/tc/futures/index.php", nil)
+		if futErr == nil {
+			setHeaders(futReq)
+			futResp, futDoErr := client.Do(futReq)
+			if futDoErr == nil {
+				defer futResp.Body.Close()
+				futDoc, docErr := goquery.NewDocumentFromReader(futResp.Body)
+				if docErr == nil {
+					futText := strings.Join(strings.Fields(futDoc.Text()), " ")
+					m := reFutures.FindStringSubmatch(futText)
+					if len(m) > 2 {
+						futuresVal = m[1]
+						futuresChange = m[2]
+					}
+				}
+			}
+		}
+	}
+
 	if hsiValue == "" {
 		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
 		m := reHSI.FindStringSubmatch(bodyText)
