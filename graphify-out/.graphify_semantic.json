@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "id": "doc:README.md",
+      "label": "Project README",
+      "type": "DOCUMENT",
+      "source_file": "README.md",
+      "summary": "Main documentation for HSI Stock & Chart Dashboard"
+    },
+    {
+      "id": "doc:AGENTS.md",
+      "label": "Project Guidelines",
+      "type": "DOCUMENT",
+      "source_file": ".agents/AGENTS.md",
+      "summary": "Build rules and AV protection guidelines for Wails Go compilation"
+    }
+  ],
+  "edges": [
+    {
+      "source": "doc:README.md",
+      "target": "file:hsi_stock_go/main.go",
+      "relation": "DOCUMENTS",
+      "confidence": 0.95
+    },
+    {
+      "source": "doc:AGENTS.md",
+      "target": "file:hsi_stock_go/build.ps1",
+      "relation": "DEFINES_BUILD_RULES",
+      "confidence": 0.95
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 500,
+  "output_tokens": 200
+}

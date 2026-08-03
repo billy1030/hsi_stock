@@ -2,7 +2,7 @@
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "HSI Live Stock Dashboard",
   "outputfilename": "HSI_Stock",
-  "version": "v20260731",
+  "version": "v2026v0803",
   "frontend:build": "",
   "frontend:install": "",
   "author": {

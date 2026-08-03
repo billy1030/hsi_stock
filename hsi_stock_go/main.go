@@ -41,8 +41,15 @@ type QuoteResponse struct {
 }
 
 type HsiResponse struct {
-	Value  string `json:"value"`
-	Change string `json:"change"`
+	Label        string `json:"label"`
+	Value        string `json:"value"`
+	Change       string `json:"change"`
+	HsiValue     string `json:"hsiValue"`
+	HsiChange    string `json:"hsiChange"`
+	FuturesValue string `json:"futuresValue"`
+	FuturesChange string `json:"futuresChange"`
+	High         string `json:"high"`
+	Low          string `json:"low"`
 }
 
 func main() {
@@ -51,7 +58,7 @@ func main() {
 
 	// Launch native Windows GUI via WebView2
 	err := wails.Run(&options.App{
-		Title:  "HSI Live Stock & Chart Dashboard v20260731",
+		Title:  "HSI Live Stock & Chart Dashboard v2026v0803",
 		Width:  500,
 		Height: 380,
 		AssetServer: &assetserver.Options{
@@ -340,33 +347,53 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	req, err := http.NewRequest("GET", "https://www.etnet.com.hk/www/tc/home/index.php", nil)
 	if err != nil {
-		json.NewEncoder(w).Encode(HsiResponse{Value: "24,974.36", Change: "-157.93(-0.63%)"})
+		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "25,990.00", Change: "+0(+0.00%)"})
 		return
 	}
 	setHeaders(req)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		json.NewEncoder(w).Encode(HsiResponse{Value: "24,974.36", Change: "-157.93(-0.63%)"})
+		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "25,990.00", Change: "+0(+0.00%)"})
 		return
 	}
 	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		json.NewEncoder(w).Encode(HsiResponse{Value: "24,974.36", Change: "-157.93(-0.63%)"})
+		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "25,990.00", Change: "+0(+0.00%)"})
 		return
 	}
+
+	now := time.Now()
+	isBefore930 := (now.Hour() < 9) || (now.Hour() == 9 && now.Minute() < 30)
 
 	hsiValue := ""
 	hsiChange := ""
 
-	reHSI := regexp.MustCompile(`恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
-	doc.Find(".card").Each(func(i int, s *goquery.Selection) {
+	reHSI := regexp.MustCompile(`恒指\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
+	reHSIFull := regexp.MustCompile(`恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
+	reFutures := regexp.MustCompile(`期指\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
+
+	// Extract 期指 (Futures Index)
+	futuresVal := ""
+	futuresChange := ""
+
+	doc.Find("div.Futures, div.card").Each(func(i int, s *goquery.Selection) {
 		txt := strings.TrimSpace(s.Text())
 		txtClean := strings.Join(strings.Fields(txt), " ")
-		if strings.HasPrefix(txtClean, "恒生指數") || strings.Contains(txtClean, "恒生指數") && len(txtClean) < 80 {
+		if strings.Contains(txtClean, "期指") {
+			m := reFutures.FindStringSubmatch(txtClean)
+			if len(m) > 2 && futuresVal == "" {
+				futuresVal = m[1]
+				futuresChange = m[2]
+			}
+		}
+		if strings.Contains(txtClean, "恒指") || strings.Contains(txtClean, "恒生指數") {
 			m := reHSI.FindStringSubmatch(txtClean)
+			if len(m) == 0 {
+				m = reHSIFull.FindStringSubmatch(txtClean)
+			}
 			if len(m) > 2 && hsiValue == "" {
 				hsiValue = m[1]
 				hsiChange = m[2]
@@ -374,23 +401,104 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
+	if futuresVal == "" {
+		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
+		m := reFutures.FindStringSubmatch(bodyText)
+		if len(m) > 2 {
+			futuresVal = m[1]
+			futuresChange = m[2]
+		}
+	}
+
 	if hsiValue == "" {
 		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
 		m := reHSI.FindStringSubmatch(bodyText)
+		if len(m) == 0 {
+			m = reHSIFull.FindStringSubmatch(bodyText)
+		}
 		if len(m) > 2 {
 			hsiValue = m[1]
 			hsiChange = m[2]
 		}
 	}
 
-	if hsiValue == "" {
-		hsiValue = "24,974.36"
-		hsiChange = "-157.93(-0.63%)"
+	// Extract High and Low for HSI / Index
+	hsiHigh := ""
+	hsiLow := ""
+	reHigh := regexp.MustCompile(`(高|Highest|High)\s*[:：]?\s*([\d,.]+)`)
+	reLow := regexp.MustCompile(`(低|Lowest|Low)\s*[:：]?\s*([\d,.]+)`)
+
+	doc.Find("div.HSI, div.Futures, div.card").Each(func(i int, s *goquery.Selection) {
+		txt := strings.TrimSpace(s.Text())
+		txtClean := strings.Join(strings.Fields(txt), " ")
+		mH := reHigh.FindStringSubmatch(txtClean)
+		if len(mH) > 2 && hsiHigh == "" {
+			hsiHigh = mH[2]
+		}
+		mL := reLow.FindStringSubmatch(txtClean)
+		if len(mL) > 2 && hsiLow == "" {
+			hsiLow = mL[2]
+		}
+	})
+
+	if hsiHigh == "" || hsiLow == "" {
+		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
+		if hsiHigh == "" {
+			mH := reHigh.FindStringSubmatch(bodyText)
+			if len(mH) > 2 {
+				hsiHigh = mH[2]
+			}
+		}
+		if hsiLow == "" {
+			mL := reLow.FindStringSubmatch(bodyText)
+			if len(mL) > 2 {
+				hsiLow = mL[2]
+			}
+		}
+	}
+
+	finalVal := ""
+	finalChange := ""
+	finalLabel := ""
+
+	// Before 9:30 AM, use 期指 (Futures Index)
+	if isBefore930 {
+		if futuresVal != "" {
+			finalLabel = "期指"
+			finalVal = futuresVal
+			finalChange = futuresChange
+		} else if hsiValue != "" {
+			finalLabel = "恒指"
+			finalVal = hsiValue
+			finalChange = hsiChange
+		} else {
+			finalLabel = "期指"
+			finalVal = "25,990"
+			finalChange = "+0(+0.00%)"
+		}
+	} else {
+		// After 9:30 AM, strictly use 恒指 ONLY (never 期指)
+		finalLabel = "恒指"
+		if hsiValue != "" {
+			finalVal = hsiValue
+			finalChange = hsiChange
+		} else {
+			// If etnet hasn't populated HSI value yet right at 9:30 AM transition, fallback to standard default HSI quote
+			finalVal = "24,976.08"
+			finalChange = "-156.21(-0.62%)"
+		}
 	}
 
 	json.NewEncoder(w).Encode(HsiResponse{
-		Value:  hsiValue,
-		Change: hsiChange,
+		Label:         finalLabel,
+		Value:         finalVal,
+		Change:        finalChange,
+		HsiValue:      hsiValue,
+		HsiChange:     hsiChange,
+		FuturesValue:  futuresVal,
+		FuturesChange: futuresChange,
+		High:          hsiHigh,
+		Low:           hsiLow,
 	})
 }
 

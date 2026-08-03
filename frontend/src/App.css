@@ -848,8 +848,60 @@ body {
 }
 
 .mini-hsi-change {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 600;
+}
+
+/* Bottom Index Bar (Main Mode) */
+.bottom-index-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--card-bg);
+  border-top: 1px solid var(--panel-border);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.72rem;
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+}
+
+.index-item {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.idx-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.idx-val {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.idx-change {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+/* Mini Mode Bottom Index Bar */
+.mini-bottom-index-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card-bg);
+  border-top: 1px solid var(--panel-border);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+}
+
+.mini-index-item {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  white-space: nowrap;
 }
 
 .btn-icon:disabled {
