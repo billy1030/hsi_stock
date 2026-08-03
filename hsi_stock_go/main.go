@@ -20,6 +20,11 @@ import (
 //go:embed all:frontend_dist
 var assets embed.FS
 
+var (
+	indexSessionHigh float64
+	indexSessionLow  float64
+)
+
 type QuoteResponse struct {
 	Code      string `json:"code"`
 	Name      string `json:"name"`
@@ -422,7 +427,7 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Extract High and Low for HSI / Index
+	// Track running session High and Low for Index dynamically in memory
 	hsiHigh := ""
 	hsiLow := ""
 	reHigh := regexp.MustCompile(`(高|Highest|High)\s*[:：]?\s*([\d,.]+)`)
@@ -441,28 +446,45 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
-	if hsiHigh == "" || hsiLow == "" {
-		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
-		if hsiHigh == "" {
-			mH := reHigh.FindStringSubmatch(bodyText)
-			if len(mH) > 2 {
-				hsiHigh = mH[2]
-			}
+	valStrToNum := func(s string) float64 {
+		cleanS := strings.ReplaceAll(s, ",", "")
+		var f float64
+		fmt.Sscanf(cleanS, "%f", &f)
+		return f
+	}
+
+	curValNum := valStrToNum(hsiValue)
+	if curValNum == 0.0 {
+		curValNum = valStrToNum(futuresVal)
+	}
+
+	if curValNum > 0 {
+		if indexSessionHigh == 0.0 || curValNum > indexSessionHigh {
+			indexSessionHigh = curValNum
 		}
-		if hsiLow == "" {
-			mL := reLow.FindStringSubmatch(bodyText)
-			if len(mL) > 2 {
-				hsiLow = mL[2]
-			}
+		if indexSessionLow == 0.0 || curValNum < indexSessionLow {
+			indexSessionLow = curValNum
 		}
 	}
 
-	// Fallback to active stock high/low if etnet homepage summary doesn't include index high/low
-	if hsiHigh == "" {
-		hsiHigh = "25,120.45"
+	if hsiHigh != "" {
+		parsedH := valStrToNum(hsiHigh)
+		if parsedH > indexSessionHigh {
+			indexSessionHigh = parsedH
+		}
 	}
-	if hsiLow == "" {
-		hsiLow = "24,890.10"
+	if hsiLow != "" {
+		parsedL := valStrToNum(hsiLow)
+		if parsedL > 0 && (indexSessionLow == 0.0 || parsedL < indexSessionLow) {
+			indexSessionLow = parsedL
+		}
+	}
+
+	if indexSessionHigh > 0 {
+		hsiHigh = fmt.Sprintf("%.2f", indexSessionHigh)
+	}
+	if indexSessionLow > 0 {
+		hsiLow = fmt.Sprintf("%.2f", indexSessionLow)
 	}
 
 	finalVal := ""
