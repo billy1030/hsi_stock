@@ -427,64 +427,32 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Track running session High and Low for Index dynamically in memory
+	// Fetch official live High and Low from etnet index detail page
 	hsiHigh := ""
 	hsiLow := ""
-	reHigh := regexp.MustCompile(`(高|Highest|High)\s*[:：]?\s*([\d,.]+)`)
-	reLow := regexp.MustCompile(`(低|Lowest|Low)\s*[:：]?\s*([\d,.]+)`)
 
-	doc.Find("div.HSI, div.Futures, div.card").Each(func(i int, s *goquery.Selection) {
-		txt := strings.TrimSpace(s.Text())
-		txtClean := strings.Join(strings.Fields(txt), " ")
-		mH := reHigh.FindStringSubmatch(txtClean)
-		if len(mH) > 2 && hsiHigh == "" {
-			hsiHigh = mH[2]
-		}
-		mL := reLow.FindStringSubmatch(txtClean)
-		if len(mL) > 2 && hsiLow == "" {
-			hsiLow = mL[2]
-		}
-	})
+	detailReq, detailErr := http.NewRequest("GET", "https://www.etnet.com.hk/www/tc/stocks/indexes_detail.php?subtype=hsi", nil)
+	if detailErr == nil {
+		setHeaders(detailReq)
+		detailResp, detailDoErr := client.Do(detailReq)
+		if detailDoErr == nil {
+			defer detailResp.Body.Close()
+			detailDoc, docErr := goquery.NewDocumentFromReader(detailResp.Body)
+			if docErr == nil {
+				detailText := strings.Join(strings.Fields(detailDoc.Text()), " ")
+				reHigh := regexp.MustCompile(`最高\s*([\d,.]+)`)
+				reLow := regexp.MustCompile(`最低\s*([\d,.]+)`)
 
-	valStrToNum := func(s string) float64 {
-		cleanS := strings.ReplaceAll(s, ",", "")
-		var f float64
-		fmt.Sscanf(cleanS, "%f", &f)
-		return f
-	}
-
-	curValNum := valStrToNum(hsiValue)
-	if curValNum == 0.0 {
-		curValNum = valStrToNum(futuresVal)
-	}
-
-	if curValNum > 0 {
-		if indexSessionHigh == 0.0 || curValNum > indexSessionHigh {
-			indexSessionHigh = curValNum
+				mH := reHigh.FindStringSubmatch(detailText)
+				if len(mH) > 1 {
+					hsiHigh = mH[1]
+				}
+				mL := reLow.FindStringSubmatch(detailText)
+				if len(mL) > 1 {
+					hsiLow = mL[1]
+				}
+			}
 		}
-		if indexSessionLow == 0.0 || curValNum < indexSessionLow {
-			indexSessionLow = curValNum
-		}
-	}
-
-	if hsiHigh != "" {
-		parsedH := valStrToNum(hsiHigh)
-		if parsedH > indexSessionHigh {
-			indexSessionHigh = parsedH
-		}
-	}
-	if hsiLow != "" {
-		parsedL := valStrToNum(hsiLow)
-		if parsedL > 0 && (indexSessionLow == 0.0 || parsedL < indexSessionLow) {
-			indexSessionLow = parsedL
-		}
-	}
-
-	if indexSessionHigh > 0 {
-		hsiHigh = fmt.Sprintf("%.2f", indexSessionHigh)
-	}
-	if indexSessionLow > 0 {
-		hsiLow = fmt.Sprintf("%.2f", indexSessionLow)
 	}
 
 	finalVal := ""
