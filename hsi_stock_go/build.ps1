@@ -38,6 +38,12 @@ if (-not $cert) {
     $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=HSI Live Stock" -CertStoreLocation Cert:\CurrentUser\My
 }
 
+# Trust certificate in CurrentUser Root store so Authenticode signature displays Valid (not UnknownError)
+$rootStore = Get-Item Cert:\CurrentUser\Root
+$rootStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
+$rootStore.Add($cert)
+$rootStore.Close()
+
 Write-Host "Signing executable: $exePath" -ForegroundColor Yellow
 Set-AuthenticodeSignature -FilePath $exePath -Certificate $cert
 
