@@ -764,20 +764,20 @@ function App() {
           {hsiData && (
             <div className="mini-bottom-index-bar">
               <div className="mini-index-item">
-                <span className="idx-label">恒指:</span>
-                <span className="idx-val">{hsiData.hsiValue || hsiData.value || '--'}</span>
-                {hsiData.hsiChange && (
-                  <span className={`idx-change ${hsiData.hsiChange.includes('+') ? 'up-color' : hsiData.hsiChange.includes('-') ? 'down-color' : ''}`}>
-                    {hsiData.hsiChange}
-                  </span>
-                )}
-              </div>
-              <div className="mini-index-item">
                 <span className="idx-label">期指:</span>
                 <span className="idx-val">{hsiData.futuresValue || '25,990'}</span>
                 {hsiData.futuresChange && (
                   <span className={`idx-change ${hsiData.futuresChange.includes('+') ? 'up-color' : hsiData.futuresChange.includes('-') ? 'down-color' : ''}`}>
                     {hsiData.futuresChange}
+                  </span>
+                )}
+              </div>
+              <div className="mini-index-item">
+                <span className="idx-label">恒指:</span>
+                <span className="idx-val">{hsiData.hsiValue || hsiData.value || '--'}</span>
+                {hsiData.hsiChange && (
+                  <span className={`idx-change ${hsiData.hsiChange.includes('+') ? 'up-color' : hsiData.hsiChange.includes('-') ? 'down-color' : ''}`}>
+                    {hsiData.hsiChange}
                   </span>
                 )}
               </div>
@@ -1002,20 +1002,20 @@ function App() {
         {hsiData && (
           <footer className="bottom-index-bar">
             <div className="index-item">
-              <span className="idx-label">恒指:</span>
-              <span className="idx-val">{hsiData.hsiValue || hsiData.value || '--'}</span>
-              {hsiData.hsiChange && (
-                <span className={`idx-change ${hsiData.hsiChange.includes('+') ? 'up-color' : hsiData.hsiChange.includes('-') ? 'down-color' : ''}`}>
-                  {hsiData.hsiChange}
-                </span>
-              )}
-            </div>
-            <div className="index-item">
               <span className="idx-label">期指:</span>
               <span className="idx-val">{hsiData.futuresValue || '25,990'}</span>
               {hsiData.futuresChange && (
                 <span className={`idx-change ${hsiData.futuresChange.includes('+') ? 'up-color' : hsiData.futuresChange.includes('-') ? 'down-color' : ''}`}>
                   {hsiData.futuresChange}
+                </span>
+              )}
+            </div>
+            <div className="index-item">
+              <span className="idx-label">恒指:</span>
+              <span className="idx-val">{hsiData.hsiValue || hsiData.value || '--'}</span>
+              {hsiData.hsiChange && (
+                <span className={`idx-change ${hsiData.hsiChange.includes('+') ? 'up-color' : hsiData.hsiChange.includes('-') ? 'down-color' : ''}`}>
+                  {hsiData.hsiChange}
                 </span>
               )}
             </div>

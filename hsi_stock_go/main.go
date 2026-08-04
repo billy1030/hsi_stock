@@ -373,6 +373,8 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	isBefore930 := (now.Hour() < 9) || (now.Hour() == 9 && now.Minute() < 30)
 
+	futuresVal := ""
+	futuresChange := ""
 	hsiValue := ""
 	hsiChange := ""
 
@@ -380,31 +382,51 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 	reHSIFull := regexp.MustCompile(`恒生指數\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
 	reFutures := regexp.MustCompile(`期指\s*([\d,.]+)\s*([+-][\d,.]+\s*\([^)]+\))`)
 
-	// Extract 期指 (Futures Index)
-	futuresVal := ""
-	futuresChange := ""
+	// Extract 期指 (Futures Index) using targeted CSS selectors
+	futuresNominal := strings.TrimSpace(doc.Find(".ref_FHSI_nominal").First().Text())
+	futuresChgVal := strings.TrimSpace(doc.Find(".ref_FHSI_change").First().Text())
+	futuresPChgVal := strings.TrimSpace(doc.Find(".ref_FHSI_pchange").First().Text())
+	if futuresNominal != "" {
+		futuresVal = futuresNominal
+		if futuresChgVal != "" && futuresPChgVal != "" {
+			futuresChange = futuresChgVal + futuresPChgVal
+		}
+	}
 
-	doc.Find("div.Futures, div.card").Each(func(i int, s *goquery.Selection) {
-		txt := strings.TrimSpace(s.Text())
-		txtClean := strings.Join(strings.Fields(txt), " ")
-		if strings.Contains(txtClean, "期指") {
-			m := reFutures.FindStringSubmatch(txtClean)
-			if len(m) > 2 && futuresVal == "" {
-				futuresVal = m[1]
-				futuresChange = m[2]
-			}
+	// Extract 恒指 (HSI) using targeted CSS selectors
+	hsiNominal := strings.TrimSpace(doc.Find(".ref_HSI_nominal").First().Text())
+	hsiChgVal := strings.TrimSpace(doc.Find(".ref_HSI_change").First().Text())
+	hsiPChgVal := strings.TrimSpace(doc.Find(".ref_HSI_pchange").First().Text())
+	if hsiNominal != "" {
+		hsiValue = hsiNominal
+		if hsiChgVal != "" && hsiPChgVal != "" {
+			hsiChange = hsiChgVal + hsiPChgVal
 		}
-		if strings.Contains(txtClean, "恒指") || strings.Contains(txtClean, "恒生指數") {
-			m := reHSI.FindStringSubmatch(txtClean)
-			if len(m) == 0 {
-				m = reHSIFull.FindStringSubmatch(txtClean)
+	}
+
+	if futuresVal == "" || hsiValue == "" {
+		doc.Find("div.Futures, div.card").Each(func(i int, s *goquery.Selection) {
+			txt := strings.TrimSpace(s.Text())
+			txtClean := strings.Join(strings.Fields(txt), " ")
+			if futuresVal == "" && strings.Contains(txtClean, "期指") {
+				m := reFutures.FindStringSubmatch(txtClean)
+				if len(m) > 2 {
+					futuresVal = m[1]
+					futuresChange = m[2]
+				}
 			}
-			if len(m) > 2 && hsiValue == "" {
-				hsiValue = m[1]
-				hsiChange = m[2]
+			if hsiValue == "" && (strings.Contains(txtClean, "恒指") || strings.Contains(txtClean, "恒生指數")) {
+				m := reHSI.FindStringSubmatch(txtClean)
+				if len(m) == 0 {
+					m = reHSIFull.FindStringSubmatch(txtClean)
+				}
+				if len(m) > 2 {
+					hsiValue = m[1]
+					hsiChange = m[2]
+				}
 			}
-		}
-	})
+		})
+	}
 
 	if futuresVal == "" {
 		bodyText := strings.Join(strings.Fields(doc.Text()), " ")
@@ -412,27 +434,6 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 		if len(m) > 2 {
 			futuresVal = m[1]
 			futuresChange = m[2]
-		}
-	}
-
-	// Direct live fetch from etnet futures page if 期指 is missing or delayed
-	if futuresVal == "" {
-		futReq, futErr := http.NewRequest("GET", "https://www.etnet.com.hk/www/tc/futures/index.php", nil)
-		if futErr == nil {
-			setHeaders(futReq)
-			futResp, futDoErr := client.Do(futReq)
-			if futDoErr == nil {
-				defer futResp.Body.Close()
-				futDoc, docErr := goquery.NewDocumentFromReader(futResp.Body)
-				if docErr == nil {
-					futText := strings.Join(strings.Fields(futDoc.Text()), " ")
-					m := reFutures.FindStringSubmatch(futText)
-					if len(m) > 2 {
-						futuresVal = m[1]
-						futuresChange = m[2]
-					}
-				}
-			}
 		}
 	}
 

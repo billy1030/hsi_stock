@@ -10,10 +10,23 @@ Get-Process -Name "ETNet_Live_Stock" -ErrorAction SilentlyContinue | Stop-Proces
 Set-Location -Path "C:\ai\etnet\hsi_stock_go"
 
 Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host " Building Frontend Assets...              " -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
+
+Set-Location -Path "C:\ai\etnet\frontend"
+npm run build
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Frontend build failed with error code $LASTEXITCODE" -ForegroundColor Red
+    exit $LASTEXITCODE
+}
+
+Set-Location -Path "C:\ai\etnet\hsi_stock_go"
+
+Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host " Building Wails binary with -trimpath...  " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
-wails build -clean -trimpath
+wails build -clean -trimpath -ldflags "-s -w"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Build failed with error code $LASTEXITCODE" -ForegroundColor Red
