@@ -258,11 +258,11 @@ app.get('/api/hsi', async (req, res) => {
     }
 
     res.json({
-      value: hsiValue || '24,974.36',
-      change: hsiChange || '-157.93(-0.63%)'
+      value: hsiValue || '0',
+      change: hsiChange || '0'
     });
   } catch (err) {
-    res.json({ value: '24,974.36', change: '-157.93(-0.63%)' });
+    res.json({ value: '0', change: '0' });
   }
 });
 

@@ -352,21 +352,21 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	req, err := http.NewRequest("GET", "https://www.etnet.com.hk/www/tc/home/index.php", nil)
 	if err != nil {
-		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "25,990.00", Change: "+0(+0.00%)"})
+		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "0", Change: "0"})
 		return
 	}
 	setHeaders(req)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "25,990.00", Change: "+0(+0.00%)"})
+		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "0", Change: "0"})
 		return
 	}
 	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "25,990.00", Change: "+0(+0.00%)"})
+		json.NewEncoder(w).Encode(HsiResponse{Label: "期指", Value: "0", Change: "0"})
 		return
 	}
 
@@ -493,8 +493,8 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 			finalChange = hsiChange
 		} else {
 			finalLabel = "期指"
-			finalVal = "25,990"
-			finalChange = "+0(+0.00%)"
+			finalVal = "0"
+			finalChange = "0"
 		}
 	} else {
 		// After 9:30 AM, strictly use 恒指 ONLY (never 期指)
@@ -504,8 +504,8 @@ func handleHSI(w http.ResponseWriter, r *http.Request) {
 			finalChange = hsiChange
 		} else {
 			// If etnet hasn't populated HSI value yet right at 9:30 AM transition, fallback to standard default HSI quote
-			finalVal = "24,976.08"
-			finalChange = "-156.21(-0.62%)"
+			finalVal = "0"
+			finalChange = "0"
 		}
 	}
 
