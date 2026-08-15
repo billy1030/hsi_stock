@@ -106,12 +106,23 @@ Running the web server version requires Node.js:
 
 ### Option 3: DeepSeek Harness Plugin 🤖
 
-Use the ETNet quote / HSI logic from any DeepSeek Harness agent:
+Use the ETNet quote / HSI / history logic directly from any DeepSeek Harness agent session:
 
-1.  **Start a session on the `hsi-stock` agent preset** (installed at `~/.dsh/.agent-presets/hsi-stock/`), or reinstall the plugin from `harness-plugin/`.
-2.  **Ask in natural language** — e.g. *"what's the HSI right now?"*, *"quote for 00700"*, or *"check last Friday / history for 09992"* — and the agent calls `etnet_hsi`, `etnet_quote`, or `hk_history` for live and historical data.
+| Tool | Parameters | Description |
+|---|---|---|
+| `etnet_quote` | `{ code: "09992" }` | Real-time stock / ETF quote from ETNet (price, change, high/low, volume, turnover, market cap) |
+| `etnet_hsi` | `{}` | Live Hang Seng Index snapshot (恒指 & 期指 futures, session range, 52-week range) |
+| `hk_history` | `{ code: "09992", days: 10 }` | Daily OHLCV history & last completed trading session (ideal when market is closed/after hours) |
 
-See [`harness-plugin/README.md`](harness-plugin/README.md) for the full plugin documentation.
+#### How to use:
+1.  **Start a session on the `hsi-stock` agent preset** (installed at `~/.dsh/.agent-presets/hsi-stock/`), or mount the plugin from `harness-plugin/`.
+2.  **Ask in natural language** — e.g.:
+    - *"what's the HSI right now?"*
+    - *"quote 00700"*
+    - *"check last Friday's close for 09992"*
+3.  The agent automatically selects and executes the appropriate tool to retrieve live or historical market data.
+
+See [`harness-plugin/README.md`](harness-plugin/README.md) for the complete plugin documentation and architecture details.
 
 ---
 
