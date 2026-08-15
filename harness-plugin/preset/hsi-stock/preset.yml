@@ -1,0 +1,2 @@
+name: HSI Stock & Chart
+description: 功能完整的编码 Agent，支持文件编辑、Shell、文件与网页检索、Skills、计划、目标、子代理和工作流。另附带 ETNet 港股/恒指实时报价能力（etnet_quote / etnet_hsi 工具与 etnet 服务）。
