@@ -60,9 +60,12 @@ export default {
     }
 
     // ---- 1. curl-backed fetch provider on ctx.web -----------------------
-    const buildCurl = (url) => {
+    const buildCurl = (url, json) => {
       const safe = url.replace(/'/g, "'\\''")
-      return "curl -s -L --max-time 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -H 'Accept: text/html,application/xhtml+xml,text/*;q=0.9' -w '\\n__DSH_STATUS__%{http_code}__' '" + safe + "'"
+      const accept = json
+        ? 'application/json'
+        : 'text/html,application/xhtml+xml,text/*;q=0.9'
+      return "curl -s -L --max-time 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' -H 'Accept: " + accept + "' -w '\\n__DSH_STATUS__%{http_code}__' '" + safe + "'"
     }
 
     let disposeProvider = () => {}
@@ -116,6 +119,8 @@ export default {
         .replace(/&#\d+;/g, '')
         .replace(/\s+/g, ' ')
         .trim()
+    const round3 = (n) =>
+      typeof n === 'number' && isFinite(n) ? Math.round(n * 1000) / 1000 : null
     const first = (html, re) => {
       const m = html.match(re)
       return m ? m[1] : ''
@@ -144,6 +149,30 @@ export default {
       const res = await web.fetch({ url })
       const content = res && res.body ? res.body.content || '' : ''
       return { statusCode: res ? res.statusCode : 0, content }
+    }
+
+    // Fetch JSON directly through the shell/curl path instead of web.fetch.
+    // The deployment may have its own fetch provider that answers ETNet HTML
+    // but returns HTTP 406 for Yahoo's JSON-only chart endpoint, so the
+    // history feed bypasses web.fetch routing entirely. The `json` flag adds
+    // an `Accept: application/json` header.
+    async function fetchJson(url) {
+      const spec = shell.resolve({
+        command: buildCurl(url, true),
+        timeoutMs: 25000,
+        stdoutMaxBytes: 4000000,
+      })
+      const result = await shell.run(spec)
+      const out = result.stdout ? result.stdout.text || '' : ''
+      const marker = out.lastIndexOf('__DSH_STATUS__')
+      let content = out
+      let statusCode = 200
+      if (marker !== -1) {
+        content = out.slice(0, marker)
+        const m = out.slice(marker).match(/(\d{3})__/)
+        if (m) statusCode = parseInt(m[1], 10)
+      }
+      return { statusCode, content }
     }
 
     // Parse the unified quote page used for both stocks and ETFs today.
@@ -373,8 +402,76 @@ export default {
       }
     }
 
+    // ---- historical daily OHLCV (Yahoo Finance chart API) ------------------
+    // ETNet's realtime page is blank outside trading hours, so "last trading
+    // day / history" queries use the public Yahoo Finance chart JSON API
+    // (no auth): https://query1.finance.yahoo.com/v8/finance/chart/{SYM}.HK
+    const YAHOO_RANGES = { 5: '5d', 10: '1mo', 30: '1mo', 90: '3mo', 180: '6mo', 365: '1y' }
+    function pickRange(days) {
+      let best = '1mo'
+      for (const k of Object.keys(YAHOO_RANGES).sort((a, b) => Number(a) - Number(b))) {
+        if (days <= Number(k)) {
+          best = YAHOO_RANGES[k]
+          break
+        }
+      }
+      return best
+    }
+
+    async function history(rawCode, days) {
+      const code = String(rawCode).padStart(5, '0')
+      // Yahoo HK symbols drop the leading zero: 09992 -> 9992.HK, 00700 -> 0700.HK
+      let yahoo = code.replace(/^0+/, '')
+      if (!yahoo) yahoo = code
+      const range = pickRange(days)
+      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + yahoo + '.HK?range=' + range + '&interval=1d'
+      try {
+        const { statusCode, content } = await fetchJson(url)
+        if (!content) return { ok: false, error: 'Failed to fetch history feed (HTTP ' + statusCode + ')', code }
+        let data
+        try {
+          data = JSON.parse(content)
+        } catch (err) {
+          return { ok: false, error: 'History feed returned non-JSON', code }
+        }
+        const res = data && data.chart && data.chart.result && data.chart.result[0]
+        if (!res) {
+          const err = data && data.chart && data.chart.error
+          return { ok: false, error: (err && err.description) || 'No history data for ' + code, code }
+        }
+        const meta = res.meta || {}
+        const ts = res.timestamp || []
+        const q = (res.indicators && res.indicators.quote && res.indicators.quote[0]) || {}
+        const candles = ts.map((t, i) => ({
+          date: new Date(t * 1000).toISOString().slice(0, 10),
+          open: round3(q.open[i]),
+          high: round3(q.high[i]),
+          low: round3(q.low[i]),
+          close: round3(q.close[i]),
+          volume: typeof q.volume[i] === 'number' ? q.volume[i] : 0,
+        }))
+        const last = candles[candles.length - 1]
+        const prev = candles[candles.length - 2]
+        return {
+          ok: true,
+          code,
+          symbol: meta.symbol || yahoo + '.HK',
+          currency: meta.currency || 'HKD',
+          source: 'yahoo-finance-chart-api',
+          range,
+          lastTradingDay: last ? last.date : '',
+          lastClose: last ? last.close : null,
+          lastChange: last && prev && last.close !== null && prev.close !== null ? round3(last.close - prev.close) : null,
+          lastChangePct: last && prev && prev.close ? round3(((last.close - prev.close) / prev.close) * 100) : null,
+          candles,
+        }
+      } catch (err) {
+        return { ok: false, error: err && err.message ? err.message : String(err), code }
+      }
+    }
+
     // ---- 2. public `etnet` service --------------------------------------
-    const service = { quote, hsi }
+    const service = { quote, hsi, history }
     let disposeService = () => {}
     try {
       disposeService = ctx.provide('etnet', service)
@@ -385,34 +482,55 @@ export default {
 
     // ---- 3. model tools ---------------------------------------------------
     const disposers = []
-    disposers.push(
-      ctx.tools.register(
-        makeToolDefinition(
-          'etnet_quote',
-          'Fetch a live HK stock or ETF quote from ETNet HK (www.etnet.com.hk) for a Hang Seng Index-listed code. Handles both ordinary stocks and ETFs (e.g. 2513 Z.AI, 07709 XL2 CSOP Hynix). After market close, price fields may be empty (data available flag = false).',
-          {
-            type: 'object',
-            properties: {
-              code: { type: 'string', description: 'HK stock code, with or without leading zeros (e.g. "2513", "02513", "7709")' },
-            },
-            required: ['code'],
+    // Defensive registration: if the deployment already ships an identically
+    // named tool (e.g. etnet_quote/etnet_hsi as host tools), skip the duplicate
+    // instead of failing the plugin — the logic is the same source.
+    const registerSafe = (tool) => {
+      try {
+        disposers.push(ctx.tools.register(tool))
+      } catch (err) {
+        console.log('hsiq: tool ' + (tool && tool.name) + ' already registered elsewhere; skipping: ' + (err && err.message ? err.message : String(err)))
+      }
+    }
+    registerSafe(
+      makeToolDefinition(
+        'etnet_quote',
+        'Fetch a live HK stock or ETF quote from ETNet HK (www.etnet.com.hk) for a Hang Seng Index-listed code. Handles both ordinary stocks and ETFs (e.g. 2513 Z.AI, 07709 XL2 CSOP Hynix). After market close, price fields may be empty (data available flag = false).',
+        {
+          type: 'object',
+          properties: {
+            code: { type: 'string', description: 'HK stock code, with or without leading zeros (e.g. "2513", "02513", "7709")' },
           },
-          async (args) => await quote(args.code),
-        ),
+          required: ['code'],
+        },
+        async (args) => await quote(args.code),
       ),
     )
-    disposers.push(
-      ctx.tools.register(
-        makeToolDefinition(
-          'etnet_hsi',
-          'Fetch the current Hang Seng Index (恒指) snapshot from ETNet HK: HSI value and change, 期指 futures value and change, session high/low, and 52-week high/low. Before 09:30 the headline uses 期指; after 09:30 it uses 恒指 only.',
-          { type: 'object', properties: {}, required: [] },
-          async () => await hsi(),
-        ),
+    registerSafe(
+      makeToolDefinition(
+        'etnet_hsi',
+        'Fetch the current Hang Seng Index (恒指) snapshot from ETNet HK: HSI value and change, 期指 futures value and change, session high/low, and 52-week high/low. Before 09:30 the headline uses 期指; after 09:30 it uses 恒指 only.',
+        { type: 'object', properties: {}, required: [] },
+        async () => await hsi(),
+      ),
+    )
+    registerSafe(
+      makeToolDefinition(
+        'hk_history',
+        'Fetch historical daily OHLCV (open/high/low/close/volume) for a HK stock or ETF from a public finance feed (Yahoo Finance chart API), returning the last N trading days with the last trading day highlighted. Use this when the live ETNet realtime quote is empty (market closed / after hours) and you need the most recent session or daily history. Examples: 09992 Pop Mart, 02800 Tracker Fund.',
+        {
+          type: 'object',
+          properties: {
+            code: { type: 'string', description: 'HK stock code, with or without leading zeros (e.g. "09992", "9992", "2800")' },
+            days: { type: 'integer', description: 'How many trading days back to include (5, 10, 30, 90, 180 or 365). Default 10.' },
+          },
+          required: ['code'],
+        },
+        async (args) => await history(args.code, args.days || 10),
       ),
     )
     ctx.on('dispose', () => disposers.forEach((d) => d()))
 
-    console.log('hsiq: ETNet quote/hsi tools + etnet service active')
+    console.log('hsiq: ETNet quote/hsi/history tools + etnet service active')
   },
 }

@@ -43,7 +43,7 @@ To drastically improve portability, execution speed, and user experience, the ba
 *   **Clean Input Box**: Removed default browser autocomplete popups (datalists) to prevent interface clutter, while keeping keystroke decoupling (press **Enter** to submit).
 *   **Dual Color Themes**: Day Mode (light slate-blue style with a soft light-blue selected item background) and Night Mode.
 *   **State Persistence**: Automatically remembers and loads your last active stock or ETF when you reopen the page.
-*   **DeepSeek Harness Plugin**: The same ETNet scraping logic is packaged as a persistent Cordis plugin (`harness-plugin/`) exposing `etnet_quote` / `etnet_hsi` model tools and an `etnet` service — auto-mounted via the `hsi-stock` agent preset so any harness agent can answer live HSI / stock queries.
+*   **DeepSeek Harness Plugin**: The same ETNet scraping logic is packaged as a persistent Cordis plugin (`harness-plugin/`) exposing `etnet_quote` / `etnet_hsi` / `hk_history` model tools and an `etnet` service — auto-mounted via the `hsi-stock` agent preset so any harness agent can answer live HSI, stock, or history queries.
 
 ---
 
@@ -109,7 +109,7 @@ Running the web server version requires Node.js:
 Use the ETNet quote / HSI logic from any DeepSeek Harness agent:
 
 1.  **Start a session on the `hsi-stock` agent preset** (installed at `~/.dsh/.agent-presets/hsi-stock/`), or reinstall the plugin from `harness-plugin/`.
-2.  **Ask in natural language** — e.g. *"what's the HSI right now?"* or *"quote for 00700"* — and the agent calls `etnet_hsi` / `etnet_quote` for live ETNet data.
+2.  **Ask in natural language** — e.g. *"what's the HSI right now?"*, *"quote for 00700"*, or *"check last Friday / history for 09992"* — and the agent calls `etnet_hsi`, `etnet_quote`, or `hk_history` for live and historical data.
 
 See [`harness-plugin/README.md`](harness-plugin/README.md) for the full plugin documentation.
 

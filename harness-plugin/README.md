@@ -17,7 +17,8 @@ scraped from ETNet HK (`www.etnet.com.hk`).
 |---|---|---|
 | Model tool | `etnet_quote` | `{ code }` → live HK stock/ETF quote (name, price, change, high/low, volume, turnover, prev-close, open, 1-month & 52-week range, market cap, short-sell, `marketOpen`) |
 | Model tool | `etnet_hsi` | `{}` → HSI snapshot (恒指 value/change, 期指 futures value/change, session high/low, 52-week high/low; pre-9:30 headline = 期指, after = 恒指) |
-| Service | `etnet` | `etnet.quote(code)` / `etnet.hsi()` for programmatic use by other plugins |
+| Model tool | `hk_history` | `{ code, days? }` → daily OHLCV candles for the last N trading days with the last trading day highlighted (sourced from Yahoo Finance chart API; use when the live ETNet quote is empty after hours) |
+| Service | `etnet` | `etnet.quote(code)` / `etnet.hsi()` / `etnet.history(code, days)` for programmatic use by other plugins |
 | Host seam | `web.fetch` | Registers a curl-backed `http` fetch provider on `ctx.web`, making `web.fetch` work in deployments that ship no fetch provider |
 
 ## Package structure
@@ -59,6 +60,7 @@ are fiber-owned and unwound on stop via `ctx.on('dispose')`.
 2. Ask in natural language:
    - *"what's the HSI right now?"* → calls `etnet_hsi`
    - *"quote for 00700"* → calls `etnet_quote`
+   - *"check last Friday / history for 09992"* → calls `hk_history` (falls back to daily OHLCV when market is closed)
 3. Or call the tools directly if your client exposes them.
 
 The preset is a full `standard` coding agent, so every normal capability
@@ -92,8 +94,14 @@ tools.
 
 ## Notes & limitations
 
-- After HK market close, ETNet returns empty placeholders — quotes come back
-  with `marketOpen: false` and blank price fields (not a parse failure).
+- After HK market close, ETNet returns empty placeholders — `etnet_quote` comes back
+  with `marketOpen: false` and blank price fields (not a parse failure). Use
+  `hk_history` to inspect the last completed trading day's OHLCV instead.
+- `hk_history` uses Yahoo Finance's public chart JSON API (`query1.finance.yahoo.com`),
+  fetched via `shell`+curl with `Accept: application/json` so it works even when
+  a deployment's `web.fetch` provider returns 406 for JSON endpoints.
+- Tool registrations use defensive try/catch guards so the plugin peacefully coexists
+  with deployments that already register `etnet_quote` or `etnet_hsi` at the host level.
 - The scraper is coupled to ETNet's live HTML; if their layout changes, field
   extraction returns empty strings and the `ok`/`error` fields flag it.
 - The curl-backed provider needs `curl` on the host (present on macOS and
