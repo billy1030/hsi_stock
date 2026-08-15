@@ -6,7 +6,7 @@
 > - **Data Sourcing**: All stock information and index data displayed by this application are captured directly from **ETNet HK** (`www.etnet.com.hk`). This application is not affiliated with, endorsed by, or officially connected to ETNet HK.
 > - **Limitation of Liability & Legal Risk**: The developer accepts **no responsibility or liability** for the accuracy, timeliness, completeness, or reliability of any data retrieved, nor for any financial decisions, trading actions, or legal consequences arising from the use of this software. **Users assume all legal risks, responsibilities, and compliance obligations** associated with running this tool or consuming data fetched from third-party sources.
 
-A unified single-port application that captures real-time stock details from ETNet HK, visualizes price and volume histories in a custom split SVG chart, and offers a highly-optimized Mini Mode Watchlist widget.
+A unified single-port application that captures real-time stock details from ETNet HK, visualizes price and volume histories in a custom split SVG chart, and offers a highly-optimized Mini Mode Watchlist widget. The same ETNet scraping logic is also packaged as a **DeepSeek Harness (Cordis) plugin** (`harness-plugin/`), so any harness agent can answer live HSI / HK stock quote queries.
 
 ## 🔄 Evolution: From Node.js/React (v1) to Native Go (v2)
 
@@ -43,6 +43,7 @@ To drastically improve portability, execution speed, and user experience, the ba
 *   **Clean Input Box**: Removed default browser autocomplete popups (datalists) to prevent interface clutter, while keeping keystroke decoupling (press **Enter** to submit).
 *   **Dual Color Themes**: Day Mode (light slate-blue style with a soft light-blue selected item background) and Night Mode.
 *   **State Persistence**: Automatically remembers and loads your last active stock or ETF when you reopen the page.
+*   **DeepSeek Harness Plugin**: The same ETNet scraping logic is packaged as a persistent Cordis plugin (`harness-plugin/`) exposing `etnet_quote` / `etnet_hsi` model tools and an `etnet` service — auto-mounted via the `hsi-stock` agent preset so any harness agent can answer live HSI / stock queries.
 
 ---
 
@@ -103,10 +104,22 @@ Running the web server version requires Node.js:
 
 ---
 
+### Option 3: DeepSeek Harness Plugin 🤖
+
+Use the ETNet quote / HSI logic from any DeepSeek Harness agent:
+
+1.  **Start a session on the `hsi-stock` agent preset** (installed at `~/.dsh/.agent-presets/hsi-stock/`), or reinstall the plugin from `harness-plugin/`.
+2.  **Ask in natural language** — e.g. *"what's the HSI right now?"* or *"quote for 00700"* — and the agent calls `etnet_hsi` / `etnet_quote` for live ETNet data.
+
+See [`harness-plugin/README.md`](harness-plugin/README.md) for the full plugin documentation.
+
+---
+
 ## 📁 Project Structure
 
 *   `/hsi_stock_go`: Standalone native Go + Wails desktop application (`main.go`, `go.mod`, `build.ps1`, embedded web assets).
 *   `/backend`: Node/Express web server proxying requests to ETNet and serving built React files.
 *   `/frontend`: React client UI built using Vite.
+*   `/harness-plugin`: DeepSeek Harness (Cordis) plugin packaging the ETNet quote / HSI logic — the zero-import `hsiq-plugin.mjs` plus the `hsi-stock` agent preset reference under `preset/`.
 *   `package.json` (root): Launches the single-port Express server serving port `3300`.
 *   `.gitignore`: Keeps the repository clean by ignoring `node_modules`, builds, and temp logs.
